@@ -128,7 +128,7 @@ public class PlayerCombat : MonoBehaviour
     [PunRPC]
     void UpdateScoreboard(int playerNumber)
     {
-        //update stats on the 
+        //update stats on the scoreboard
         if(scoreboard != null)
             scoreboard.SetScore(playerNumber, score);
     }
@@ -136,7 +136,7 @@ public class PlayerCombat : MonoBehaviour
     [PunRPC]
     void UpdateScoreboardName(int playerNumber, string playerName)
     {
-        //update scoreboard stats
+        //update player names on the scoreboard
         if(scoreboard != null)
             scoreboard.SetPlayerName(playerNumber, playerName);
     }
