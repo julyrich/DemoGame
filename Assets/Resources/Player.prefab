@@ -455,9 +455,13 @@ MonoBehaviour:
   playerHealth: 100
   playerMaxHealth: 100
   killBonus: 40
+  healAmount: 40
   HUD: {fileID: 5845342729744284693}
   scoreTxt: {fileID: 4427190893866112553}
   playerNameTxt: {fileID: 5113705703773995786}
+  healCooldown: {fileID: 4145185311562953666}
+  fireball: {fileID: 7866465362423492386, guid: dfff8fa7de67a4d4e866ed3c8d6be2cf, type: 3}
+  fireballAttackrate: 2
 --- !u!114 &8584149067579103267
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -576,6 +580,22 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1319413741}
     m_Modifications:
+    - target: {fileID: 675776340108041814, guid: c7292c70e812935489e91186e783b718, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 675776340108041814, guid: c7292c70e812935489e91186e783b718, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4150878703148691593, guid: c7292c70e812935489e91186e783b718, type: 3}
+      propertyPath: m_ScaleModel.SynchronizeEnabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4150878703148691593, guid: c7292c70e812935489e91186e783b718, type: 3}
+      propertyPath: m_RotationModel.SynchronizeEnabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4915699364547759824, guid: c7292c70e812935489e91186e783b718, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -672,6 +692,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: HUD
       objectReference: {fileID: 0}
+    - target: {fileID: 8489295450302548397, guid: c7292c70e812935489e91186e783b718, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c7292c70e812935489e91186e783b718, type: 3}
 --- !u!114 &137904948447306720 stripped
@@ -694,6 +718,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8efc6b1d64977384eb3405357896c656, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &4145185311562953666 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4313658188027525182, guid: c7292c70e812935489e91186e783b718, type: 3}
+  m_PrefabInstance: {fileID: 169897981111536636}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bd41bdb3096c33408001593a7393b70, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &4305858372648631157 stripped

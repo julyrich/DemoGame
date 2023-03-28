@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Bullet
   - HPBar
+  - CDBar
   layers:
   - Default
   - TransparentFX

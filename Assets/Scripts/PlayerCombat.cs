@@ -15,17 +15,21 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] int playerHealth = 100;
     [SerializeField] int playerMaxHealth = 100;
     [SerializeField] int killBonus = 40;
+    [SerializeField] int healAmount = 40;
     [SerializeField] Transform HUD;
     [SerializeField] TextMeshProUGUI scoreTxt;
     [SerializeField] TextMeshProUGUI playerNameTxt;
+    [SerializeField] HealCooldownController healCooldown;
     //fireball settings
-    // [SerializeField] float fireballExplosionRadius {get; set;} = 1f;
+    [SerializeField] GameObject fireball;
+    [SerializeField] float fireballAttackrate = 2f;
 
     PhotonView photonView;
     CharacterController2D characterController;
     HealthBar healthBar;
     ScoreboardController scoreboard;
     float attackTimeCnt = 0;
+    float fireballAttackTimeCnt = 0;
     int score = 0;
     int playerNumber;
     bool isGameFinished = false;
@@ -44,9 +48,16 @@ public class PlayerCombat : MonoBehaviour
         {
             AdaptHUD();
         }
+
         //initialise HUD
         healthBar.SetMaxHealth(playerMaxHealth);
         healthBar.SetHealth(playerHealth);
+        if(photonView.IsMine)
+        {
+            healCooldown.gameObject.SetActive(true);
+            //set cooldown of the heal to 4s
+            healCooldown.SetCooldownTime(4);
+        }
     }
 
     // Update is called once per frame
@@ -69,14 +80,42 @@ public class PlayerCombat : MonoBehaviour
                 attackTimeCnt += Time.deltaTime;
             }
 
+            if(fireballAttackTimeCnt >= (1/fireballAttackrate))
+            {
+                //F key creates a fireball
+                if(Input.GetKeyDown(KeyCode.F))
+                {
+                    CreateFireBall();
+                    fireballAttackTimeCnt = 0;
+                }
+            }
+            else
+            {
+                fireballAttackTimeCnt += Time.deltaTime;
+            }
+
+            if(healCooldown.healAvailable && Input.GetKeyDown(KeyCode.Q))
+            {
+                photonView.RPC("HealPlayer", RpcTarget.All, healAmount);
+                healCooldown.Healed();
+            }
+
             //update scoreboard
             photonView.RPC("UpdateScoreboard", RpcTarget.All, playerNumber);
 
             //update player names
             photonView.RPC("SetPlayerName", RpcTarget.All, PhotonNetwork.NickName);
+            photonView.RPC("UpdateScoreboardName", RpcTarget.All, playerNumber, PhotonNetwork.NickName);
 
             if(isGameFinished)
                 Finish(playerNumber);
+        }
+
+        //also update text alignment for first player
+        if(playerNumber == 0 && !photonView.IsMine)
+        {
+            playerNameTxt.alignment = TextAlignmentOptions.MidlineRight;
+            scoreTxt.alignment = TextAlignmentOptions.MidlineLeft;
         }
 
         //update score text
@@ -88,6 +127,13 @@ public class PlayerCombat : MonoBehaviour
     {
         if(scoreboard != null)
             scoreboard.SetScore(playerNumber, score);
+    }
+
+    [PunRPC]
+    void UpdateScoreboardName(int playerNumber, string playerName)
+    {
+        if(scoreboard != null)
+            scoreboard.SetPlayerName(playerNumber, playerName);
     }
 
     [PunRPC]
@@ -107,18 +153,18 @@ public class PlayerCombat : MonoBehaviour
             newPosition.x *= -1;
             rectTransform.anchoredPosition = newPosition;
 
-            //flip hp bar
-            if(child.tag == "HPBar")
+            //flip hp and cooldown bars
+            if(child.tag == "HPBar" || child.tag == "CDBar")
             {
                 Vector3 newScale = child.localScale;
                 newScale.x *= -1;
                 child.localScale = newScale;
 
                 //unflip hp text
-                TextMeshProUGUI hpText = child.GetComponentInChildren<TextMeshProUGUI>();
-                Vector3 newTxtScale = hpText.transform.localScale;
+                TextMeshProUGUI text = child.GetComponentInChildren<TextMeshProUGUI>();
+                Vector3 newTxtScale = text.transform.localScale;
                 newTxtScale.x *= -1;
-                hpText.transform.localScale = newTxtScale;
+                text.transform.localScale = newTxtScale;
             }
             else
             {
@@ -156,8 +202,7 @@ public class PlayerCombat : MonoBehaviour
                 if(otherPlayerHealth <= 0 && photonView.IsMine)
                 {
                     //get kill bonus in this case and display final results
-                    photonView.RPC("GetKillBonus", RpcTarget.All, playerNumber);
-                    isGameFinished = true;
+                    KilledPlayer();
                 }
             }
         }
@@ -171,7 +216,9 @@ public class PlayerCombat : MonoBehaviour
     [PunRPC]
     void TakeDamage(int damage)
     {
-        animator.SetTrigger("PlayerHit");
+        //change color to show damage taken
+        StartCoroutine(DamageTick(.5f));
+
         playerHealth -= damage;
         if(playerHealth <= 0)
         {
@@ -181,9 +228,25 @@ public class PlayerCombat : MonoBehaviour
         healthBar.SetHealth(playerHealth);
     }
 
+    IEnumerator DamageTick(float duration)
+    {
+        Material material = gameObject.GetComponent<SpriteRenderer>().material;
+        Color originColor = material.color;
+
+        material.color = new Color(255,255,255,1);
+
+        float timeCnt = 0;
+        while(timeCnt < duration)
+        {
+            timeCnt += Time.deltaTime;
+            yield return null;
+        }
+
+        material.color = originColor;
+    }
+
     void Die()
     {
-        animator.SetBool("PlayerDead", true);
         isGameFinished = true;
     }
 
@@ -199,6 +262,12 @@ public class PlayerCombat : MonoBehaviour
         scoreboard.SetKillBonus(playerNumber, killBonus);
         UpdateScoreboard(playerNumber);
         scoreboard.FinishGame();
+    }
+
+    public void KilledPlayer()
+    {
+        photonView.RPC("GetKillBonus", RpcTarget.All, playerNumber);
+        isGameFinished = true;
     }
 
     public int GetPlayerHealth()
@@ -218,29 +287,32 @@ public class PlayerCombat : MonoBehaviour
         scoreboard.gameObject.SetActive(true);
     }
 
-    // void CreateFireBall(GameObject fireBallObject, int damage)
-    // {
-    //     GameObject newFireball = Instantiate(fireBallObject, transform.position, new Quaternion(0,0,0,0));
-    //     FireBallController fireball = newFireball.GetComponent<FireBallController>();
+    [PunRPC]
+    void HealPlayer(int value)
+    {
+        playerHealth += value;
+        if(playerHealth >= playerMaxHealth)
+            playerHealth = playerMaxHealth;
 
-    //     //throw fire ball in the direction the player is facing
-    //     if(transform.localScale.x < 0)
-    //         fireball.projectileSpeed *= -1;
+        healthBar.SetHealth(playerHealth);
+    }
 
-    //     fireball.SetDamage(damage);
-    //     fireball.SetStunDuration(fireballStun);
-    //     fireball.SetExplosionRadius(fireballExplosionRadius);
-    // }
+    void CreateFireBall()
+    {
+        Vector3 initPosition = transform.position;
+        //throw the fireball in the players direction, a little away from the player
+        if(transform.localScale.x < 0)
+            initPosition -= new Vector3(1f, 0);
+        else
+            initPosition += new Vector3(1f, 0);
 
-    // public virtual void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
-    // {
-    //     if(stream.IsWriting)
-    //     {
-    //         stream.SendNext(playerHealth);
-    //     }
-    //     else if(stream.IsReading)
-    //     {
-    //         playerHealth = (int)stream.ReceiveNext();
-    //     }
-    // }
+        GameObject newFireball = PhotonNetwork.Instantiate(fireball.name, initPosition, Quaternion.identity);
+
+        FireBallController fireballControl = newFireball.GetComponent<FireBallController>();
+        fireballControl.parentPlayerViewId = photonView.ViewID;
+
+        //throw fire ball in the direction the player is facing
+        if(transform.localScale.x < 0)
+            fireballControl.projectileSpeed *= -1;
+    }
 }

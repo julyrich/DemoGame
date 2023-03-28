@@ -11,6 +11,7 @@ public class CreateAndJoinRooms : MonoBehaviourPunCallbacks
     [SerializeField] TMP_InputField createInput;
     [SerializeField] TMP_InputField joinInput;
     [SerializeField] TMP_InputField nameInput;
+    [SerializeField] TextMeshProUGUI errorTxt;
 
 
     public void CreateRoom()
@@ -24,11 +25,23 @@ public class CreateAndJoinRooms : MonoBehaviourPunCallbacks
         PhotonNetwork.CreateRoom(createInput.text, roomOptions);
     }
 
+    public override void OnCreateRoomFailed(short returnCode, string message)
+    {
+        errorTxt.text = message;
+        errorTxt.gameObject.SetActive(true);
+    }
+
     public void JoinRoom()
     {
         SetPlayerName();
 
         PhotonNetwork.JoinRoom(joinInput.text);
+    }
+
+    public override void OnJoinRoomFailed(short returnCode, string message)
+    {
+        errorTxt.text = message;
+        errorTxt.gameObject.SetActive(true);
     }
 
     void SetPlayerName()

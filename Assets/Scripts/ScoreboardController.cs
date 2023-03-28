@@ -5,6 +5,7 @@ using TMPro;
 
 public class ScoreboardController : MonoBehaviour
 {
+    [SerializeField] List<TextMeshProUGUI> playerNameTexts;
     [SerializeField] List<TextMeshProUGUI> scoreTexts;
     [SerializeField] List<TextMeshProUGUI> killBonusTexts;
     [SerializeField] List<TextMeshProUGUI> finalScoreTexts;
@@ -27,6 +28,11 @@ public class ScoreboardController : MonoBehaviour
     {
         scoreTexts[playerNumber].text = score.ToString();
         scores[playerNumber] = score;
+    }
+
+    public void SetPlayerName(int playerNumber, string name)
+    {
+        playerNameTexts[playerNumber].text = name;
     }
 
     public void SetKillBonus(int playerNumber, int bonus)
