@@ -43,6 +43,7 @@ public class ScoreboardController : MonoBehaviour
 
     public void SetVictoryOrDefeat(int playerNumber)
     {
+        //set the victory or defeat image for this player according to the total points
         int otherPlayerNumber = 1;
         if(playerNumber == 1)
             otherPlayerNumber = 0;

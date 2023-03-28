@@ -56,6 +56,8 @@ public class GameController : MonoBehaviour
 
     public void Rematch()
     {
+        //if player wants a rematch, load the game again
+        //second player also needs to select rematch to spawn in
         Time.timeScale = 1f;
         PhotonNetwork.LoadLevel("Game");
     }

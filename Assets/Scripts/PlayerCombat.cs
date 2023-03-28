@@ -41,6 +41,8 @@ public class PlayerCombat : MonoBehaviour
         characterController = gameObject.GetComponent<CharacterController2D>();
         healthBar = HUD.GetComponentInChildren<HealthBar>(true);
         scoreboard = GameObject.FindObjectOfType<ScoreboardController>(true);
+
+        //assign playernumber so the scores are correctly displayed
         playerNumber = PhotonNetwork.LocalPlayer.ActorNumber - 1;
 
         //adapt HUD to the player, first player HUD on the left side, second player HUD on the right side
@@ -94,6 +96,7 @@ public class PlayerCombat : MonoBehaviour
                 fireballAttackTimeCnt += Time.deltaTime;
             }
 
+            //if a heal is available the player can heal with the Q button
             if(healCooldown.healAvailable && Input.GetKeyDown(KeyCode.Q))
             {
                 photonView.RPC("HealPlayer", RpcTarget.All, healAmount);
@@ -125,6 +128,7 @@ public class PlayerCombat : MonoBehaviour
     [PunRPC]
     void UpdateScoreboard(int playerNumber)
     {
+        //update stats on the 
         if(scoreboard != null)
             scoreboard.SetScore(playerNumber, score);
     }
@@ -132,6 +136,7 @@ public class PlayerCombat : MonoBehaviour
     [PunRPC]
     void UpdateScoreboardName(int playerNumber, string playerName)
     {
+        //update scoreboard stats
         if(scoreboard != null)
             scoreboard.SetPlayerName(playerNumber, playerName);
     }
@@ -139,6 +144,7 @@ public class PlayerCombat : MonoBehaviour
     [PunRPC]
     void SetPlayerName(string name)
     {
+        //set playername above health bar
         playerNameTxt.text = name;
     }
 
@@ -230,6 +236,7 @@ public class PlayerCombat : MonoBehaviour
 
     IEnumerator DamageTick(float duration)
     {
+        //change material color of the player for the duration to white
         Material material = gameObject.GetComponent<SpriteRenderer>().material;
         Color originColor = material.color;
 
